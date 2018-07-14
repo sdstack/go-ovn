@@ -38,10 +38,22 @@ const (
 )
 
 const (
-	LSWITCH     string = "Logical_Switch"
-	LPORT       string = "Logical_Switch_Port"
-	ACLS         string = "ACL"
-	Address_Set string = "Address_Set"
+	TableNBGlobal       string = "NB_Global"
+	TableLS             string = "Logical_Switch"
+	TableLSP            string = "Logical_Switch_Port"
+	TableACL            string = "ACL"
+	TableAS             string = "Address_Set"
+	TableLB             string = "Load_Balancer"
+	TableLR             string = "Logical_Router"
+	TableQoS            string = "QoS"
+	TableLRP            string = "Logical_Router_Port"
+	TableLRSR           string = "Logical_Router_Static_Route"
+	TableNAT            string = "NAT"
+	TableDHCPOptions    string = "DHCP_Options"
+	TableConnection     string = "Connection"
+	TableDNS            string = "DNS"
+	TalbeSSL            string = "SSL"
+	TalbeGatewayChassis string = "Gateway_Chassis"
 )
 
 const (
@@ -97,7 +109,6 @@ func GetInstance(socketfile string, protocol string, server string, port int, ca
 	})
 	return ovnDBApi
 }
-
 
 func SetCallBack(callback OVNSignal) {
 	if ovnDBApi != nil {
