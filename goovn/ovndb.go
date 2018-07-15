@@ -19,7 +19,6 @@ package goovn
 import (
 	"errors"
 	"fmt"
-	"os"
 	"sync"
 
 	"github.com/socketplane/libovsdb"
@@ -103,7 +102,6 @@ func GetInstance(socketfile string, protocol string, server string, port int, ca
 
 		if err != nil {
 			panic(fmt.Sprint("Library goovn initilizing failed", err))
-			os.Exit(1)
 		}
 		ovnDBApi = dbapi
 	})
