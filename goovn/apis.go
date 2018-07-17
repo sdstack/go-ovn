@@ -34,31 +34,31 @@ type Execution interface {
 // North bound api set
 type OVNDBApi interface {
 	// Create a logical switch named SWITCH
-	LSWAdd(lsw string) *OvnCommand
+	LSWAdd(lsw string) (*OvnCommand, error)
 	//delete SWITCH and all its ports
-	LSWDel(lsw string) *OvnCommand
+	LSWDel(lsw string) (*OvnCommand, error)
 	// Print the names of all logical switches
-	LSWList() *OvnCommand
+	LSWList() (*OvnCommand, error)
 	// Add logical port PORT on SWITCH
-	LSPAdd(lsw, lsp string) *OvnCommand
+	LSPAdd(lsw, lsp string) (*OvnCommand, error)
 	// Delete PORT from its attached switch
-	LSPDel(lsp string) *OvnCommand
+	LSPDel(lsp string) (*OvnCommand, error)
 	// Set addressset per lport
-	LSPSetAddress(lsp string, addresses ...string) *OvnCommand
+	LSPSetAddress(lsp string, addresses ...string) (*OvnCommand, error)
 	// Set port security per lport
-	LSPSetPortSecurity(lsp string, security ...string) *OvnCommand
+	LSPSetPortSecurity(lsp string, security ...string) (*OvnCommand, error)
 	// Add ACL
-	ACLAdd(lsw, direct, match, action string, priority int, external_ids map[string]string, logflag bool) *OvnCommand
+	ACLAdd(lsw, direct, match, action string, priority int, external_ids map[string]string, logflag bool) (*OvnCommand, error)
 	// Delete acl
-	ACLDel(lsw, direct, match string, priority int, external_ids map[string]string) *OvnCommand
+	ACLDel(lsw, direct, match string, priority int, external_ids map[string]string) (*OvnCommand, error)
 	// Update address set
-	ASUpdate(name string, addrs []string, external_ids map[string]string) *OvnCommand
+	ASUpdate(name string, addrs []string, external_ids map[string]string) (*OvnCommand, error)
 	// Add addressset
-	ASAdd(name string, addrs []string, external_ids map[string]string) *OvnCommand
+	ASAdd(name string, addrs []string, external_ids map[string]string) (*OvnCommand, error)
 	// Delete addressset
-	ASDel(name string) *OvnCommand
+	ASDel(name string) (*OvnCommand, error)
 	// Set options in lswtich
-	LSSetOpt(lsp string, options map[string]string) *OvnCommand
+	LSSetOpt(lsp string, options map[string]string) (*OvnCommand, error)
 	// Exec command, support mul-commands in one transaction.
 	Execute(cmds ...*OvnCommand) error
 
