@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-package goovn
+package ovn
 
 import (
 	"errors"
@@ -25,11 +25,11 @@ import (
 )
 
 const (
-	insert string = "insert"
-	mutate string = "mutate"
-	del    string = "delete"
-	list   string = "select"
-	update string = "update"
+	OpInsert string = "insert"
+	OpMutate string = "mutate"
+	OpDelete string = "delete"
+	OpList   string = "select"
+	OpUpdate string = "update"
 )
 
 const (
@@ -88,24 +88,29 @@ type OVNDB struct {
 var once sync.Once
 var ovnDBApi OVNDBApi
 
-func GetInstance(socketfile string, protocol string, server string, port int, callback OVNSignal) OVNDBApi {
-	once.Do(func() {
-		var dbapi *OVNDB
-		var err error
-		if protocol == UNIX {
-			dbapi, err = newNBBySocket(socketfile, callback)
-		} else if protocol == TCP {
-			dbapi, err = newNBByServer(server, port, callback)
-		} else {
-			err = errors.New(fmt.Sprintf("The protocol [%s] is not supported", protocol))
-		}
+func GetInstance(socketfile string, protocol string, server string, port int, callback OVNSignal) (OVNDBApi, error) {
+	//	once.Do(func() {
+	var dbapi *OVNDB
+	var err error
 
-		if err != nil {
-			panic(fmt.Sprint("Library goovn initilizing failed", err))
-		}
-		ovnDBApi = dbapi
-	})
-	return ovnDBApi
+	if ovnDBApi != nil {
+		return ovnDBApi, nil
+	}
+
+	if protocol == UNIX {
+		dbapi, err = newNBBySocket(socketfile, callback)
+	} else if protocol == TCP {
+		dbapi, err = newNBByServer(server, port, callback)
+	} else {
+		err = errors.New(fmt.Sprintf("The protocol [%s] is not supported", protocol))
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	ovnDBApi = dbapi
+	//})
+	return ovnDBApi, nil
 }
 
 func SetCallBack(callback OVNSignal) {

@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-package goovn
+package ovn
 
 import (
 	"github.com/socketplane/libovsdb"

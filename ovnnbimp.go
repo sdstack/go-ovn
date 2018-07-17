@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-package goovn
+package ovn
 
 import (
 	"errors"
@@ -56,7 +56,7 @@ func newNBImp(client *ovnDBClient, callback OVNSignal) (*ovnDBImp, error) {
 func (odbi *ovnDBImp) lswListImp() (*OvnCommand, error) {
 	condition := libovsdb.NewCondition("name", "!=", "")
 	listOp := libovsdb.Operation{
-		Op:    list,
+		Op:    OpList,
 		Table: TableLS,
 		Where: []interface{}{condition},
 	}
@@ -79,7 +79,7 @@ func (odbi *ovnDBImp) lswAddImp(lsw string) (*OvnCommand, error) {
 		return nil, errors.New("The logical switch existed, and will get nil command")
 	}
 	insertOp := libovsdb.Operation{
-		Op:       insert,
+		Op:       OpInsert,
 		Table:    TableLS,
 		Row:      lswitch,
 		UUIDName: namedUUID.String(),
@@ -91,7 +91,7 @@ func (odbi *ovnDBImp) lswAddImp(lsw string) (*OvnCommand, error) {
 func (odbi *ovnDBImp) lswDelImp(lsw string) (*OvnCommand, error) {
 	condition := libovsdb.NewCondition("name", "==", lsw)
 	delOp := libovsdb.Operation{
-		Op:    del,
+		Op:    OpDelete,
 		Table: TableLS,
 		Where: []interface{}{condition},
 	}
@@ -250,7 +250,7 @@ func (odbi *ovnDBImp) lspAddImp(lsw, lsp string) (*OvnCommand, error) {
 	}
 
 	insertOp := libovsdb.Operation{
-		Op:       insert,
+		Op:       OpInsert,
 		Table:    TableLSP,
 		Row:      lsprow,
 		UUIDName: namedUUID.String(),
@@ -258,11 +258,11 @@ func (odbi *ovnDBImp) lspAddImp(lsw, lsp string) (*OvnCommand, error) {
 
 	mutateUUID := []libovsdb.UUID{{namedUUID.String()}}
 	mutateSet, _ := libovsdb.NewOvsSet(mutateUUID)
-	mutation := libovsdb.NewMutation("ports", insert, mutateSet)
+	mutation := libovsdb.NewMutation("ports", OpInsert, mutateSet)
 	condition := libovsdb.NewCondition("name", "==", lsw)
 
 	mutateOp := libovsdb.Operation{
-		Op:        mutate,
+		Op:        OpMutate,
 		Table:     TableLS,
 		Mutations: []interface{}{mutation},
 		Where:     []interface{}{condition},
@@ -278,16 +278,16 @@ func (odbi *ovnDBImp) lspDelImp(lsp string) (*OvnCommand, error) {
 	mutateUUID := []libovsdb.UUID{{lspUUID}}
 	condition := libovsdb.NewCondition("name", "==", lsp)
 	delOp := libovsdb.Operation{
-		Op:    del,
+		Op:    OpDelete,
 		Table: TableLSP,
 		Where: []interface{}{condition},
 	}
 	mutateSet, _ := libovsdb.NewOvsSet(mutateUUID)
-	mutation := libovsdb.NewMutation("ports", del, mutateSet)
+	mutation := libovsdb.NewMutation("ports", OpDelete, mutateSet)
 	mucondition := libovsdb.NewCondition("_uuid", "==", libovsdb.UUID{odbi.getRowUUIDContainsUUID(TableLS, "ports", lspUUID)})
 	// simple mutate operation
 	mutateOp := libovsdb.Operation{
-		Op:        mutate,
+		Op:        OpMutate,
 		Table:     TableLS,
 		Mutations: []interface{}{mutation},
 		Where:     []interface{}{mucondition},
@@ -327,7 +327,7 @@ func (odbi *ovnDBImp) lspSetDHCPv4OptionsImp(lsp string, cidr string, opts map[s
 	*/
 
 	insertOp := libovsdb.Operation{
-		Op:       insert,
+		Op:       OpInsert,
 		Table:    TableDHCPOptions,
 		Row:      dhcprow,
 		UUIDName: namedUUID.String(),
@@ -335,12 +335,12 @@ func (odbi *ovnDBImp) lspSetDHCPv4OptionsImp(lsp string, cidr string, opts map[s
 
 	mutateUUID := []libovsdb.UUID{{namedUUID.String()}}
 	mutateSet, _ := libovsdb.NewOvsSet(mutateUUID)
-	mutation := libovsdb.NewMutation("dhcpv4_options", insert, mutateSet)
+	mutation := libovsdb.NewMutation("dhcpv4_options", OpInsert, mutateSet)
 	condition := libovsdb.NewCondition("name", "==", lsp)
 
 	// simple mutate operation
 	mutateOp := libovsdb.Operation{
-		Op:        mutate,
+		Op:        OpMutate,
 		Table:     TableLSP,
 		Mutations: []interface{}{mutation},
 		Where:     []interface{}{condition},
@@ -367,7 +367,7 @@ func (odbi *ovnDBImp) lspSetAddressImp(lsp string, addr ...string) (*OvnCommand,
 	row["addresses"] = addresses
 	condition := libovsdb.NewCondition("name", "==", lsp)
 	Op := libovsdb.Operation{
-		Op:    update,
+		Op:    OpUpdate,
 		Table: TableLSP,
 		Row:   row,
 		Where: []interface{}{condition},
@@ -382,7 +382,7 @@ func (odbi *ovnDBImp) lspSetPortSecurityImp(lsp string, security ...string) (*Ov
 	row["port_security"] = port_security
 	condition := libovsdb.NewCondition("name", "==", lsp)
 	Op := libovsdb.Operation{
-		Op:    update,
+		Op:    OpUpdate,
 		Table: TableLSP,
 		Row:   row,
 		Where: []interface{}{condition},
@@ -416,7 +416,7 @@ func (odbi *ovnDBImp) aclAddImp(lsw, direct, match, action string, priority int,
 	aclrow["action"] = action
 	aclrow["log"] = logflag
 	insertOp := libovsdb.Operation{
-		Op:       insert,
+		Op:       OpInsert,
 		Table:    TableACL,
 		Row:      aclrow,
 		UUIDName: namedUUID.String(),
@@ -424,12 +424,12 @@ func (odbi *ovnDBImp) aclAddImp(lsw, direct, match, action string, priority int,
 
 	mutateUUID := []libovsdb.UUID{{namedUUID.String()}}
 	mutateSet, _ := libovsdb.NewOvsSet(mutateUUID)
-	mutation := libovsdb.NewMutation("acls", insert, mutateSet)
+	mutation := libovsdb.NewMutation("acls", OpInsert, mutateSet)
 	condition := libovsdb.NewCondition("name", "==", lsw)
 
 	// simple mutate operation
 	mutateOp := libovsdb.Operation{
-		Op:        mutate,
+		Op:        OpMutate,
 		Table:     TableLS,
 		Mutations: []interface{}{mutation},
 		Where:     []interface{}{condition},
@@ -470,17 +470,17 @@ func (odbi *ovnDBImp) aclDelImp(lsw, direct, match string, priority int, externa
 	uuidcondition := libovsdb.NewCondition("_uuid", "==", libovsdb.UUID{aclUUID})
 	wherecondition = append(wherecondition, uuidcondition)
 	delOp := libovsdb.Operation{
-		Op:    del,
+		Op:    OpDelete,
 		Table: TableACL,
 		Where: wherecondition,
 	}
 
-	mutation := libovsdb.NewMutation("acls", del, libovsdb.UUID{aclUUID})
+	mutation := libovsdb.NewMutation("acls", OpDelete, libovsdb.UUID{aclUUID})
 	condition := libovsdb.NewCondition("name", "==", lsw)
 
 	// Simple mutate operation
 	mutateOp := libovsdb.Operation{
-		Op:        mutate,
+		Op:        OpMutate,
 		Table:     TableLS,
 		Mutations: []interface{}{mutation},
 		Where:     []interface{}{condition},
@@ -503,7 +503,7 @@ func (odbi *ovnDBImp) ASUpdate(name string, addrs []string, external_ids map[str
 	}
 	condition := libovsdb.NewCondition("name", "==", name)
 	Op := libovsdb.Operation{
-		Op:    update,
+		Op:    OpUpdate,
 		Table: TableAS,
 		Row:   asrow,
 		Where: []interface{}{condition},
@@ -529,7 +529,7 @@ func (odbi *ovnDBImp) ASAdd(name string, addrs []string, external_ids map[string
 	addresses, _ := libovsdb.NewOvsSet(addrs)
 	asrow["addresses"] = addresses
 	Op := libovsdb.Operation{
-		Op:    insert,
+		Op:    OpInsert,
 		Table: TableAS,
 		Row:   asrow,
 	}
@@ -550,7 +550,7 @@ func (odbi *ovnDBImp) GetASByName(name string) *AddressSet {
 func (odbi *ovnDBImp) ASDel(name string) (*OvnCommand, error) {
 	condition := libovsdb.NewCondition("name", "==", name)
 	delOp := libovsdb.Operation{
-		Op:    del,
+		Op:    OpDelete,
 		Table: TableAS,
 		Where: []interface{}{condition},
 	}
@@ -560,12 +560,12 @@ func (odbi *ovnDBImp) ASDel(name string) (*OvnCommand, error) {
 
 func (odbi *ovnDBImp) LSSetOpt(lsp string, options map[string]string) (*OvnCommand, error) {
 	mutatemap, _ := libovsdb.NewOvsMap(options)
-	mutation := libovsdb.NewMutation("options", insert, mutatemap)
+	mutation := libovsdb.NewMutation("options", OpInsert, mutatemap)
 	condition := libovsdb.NewCondition("name", "==", lsp)
 
 	// simple mutate operation
 	mutateOp := libovsdb.Operation{
-		Op:        mutate,
+		Op:        OpMutate,
 		Table:     TableLSP,
 		Mutations: []interface{}{mutation},
 		Where:     []interface{}{condition},

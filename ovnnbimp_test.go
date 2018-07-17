@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-package goovn
+package ovn
 
 import (
 	"os"
@@ -37,12 +37,16 @@ const (
 var ovndbapi OVNDBApi
 
 func init() {
+	var err error
 	var ovs_rundir = os.Getenv("OVS_RUNDIR")
 	if ovs_rundir == "" {
 		ovs_rundir = OVS_RUNDIR
 	}
 	var socket = ovs_rundir + "/" + OVNNB_SOCKET
-	ovndbapi = GetInstance(socket, UNIX, "", 0, nil)
+	ovndbapi, err = GetInstance(socket, UNIX, "", 0, nil)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func TestACLs(t *testing.T) {
