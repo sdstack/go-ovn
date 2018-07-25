@@ -59,6 +59,9 @@ type OVNDBApi interface {
 	ASDel(name string) (*OvnCommand, error)
 	// Set options in lswtich
 	LSSetOpt(lsp string, options map[string]string) (*OvnCommand, error)
+	// Set DHCPv4 Options
+	LSPSetDHCPv4Options(lsp string, cidr string, options map[string]string, external_ids map[string]string) (*OvnCommand, error)
+
 	// Exec command, support mul-commands in one transaction.
 	Execute(cmds ...*OvnCommand) error
 

@@ -21,15 +21,20 @@ import (
 	"fmt"
 	"math/rand"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/oklog/ulid"
+	//	"github.com/oklog/ulid"
 	"github.com/socketplane/libovsdb"
 )
 
 var (
 	entropy *rand.Rand
+)
+
+var (
+	ErrorExists = errors.New("Item already exists")
 )
 
 func init() {
@@ -66,8 +71,9 @@ func (odbi *ovnDBImp) lswListImp() (*OvnCommand, error) {
 }
 
 func (odbi *ovnDBImp) lswAddImp(lsw string) (*OvnCommand, error) {
-	//	namedUUID := "lsw_add" + strconv.Itoa(rand.Int())
-	namedUUID, err := ulid.New(ulid.Now(), entropy)
+	var err error
+	namedUUID := "lsw_add" + strconv.Itoa(rand.Int())
+	//namedUUID, err := ulid.New(ulid.Now(), entropy)
 	if err != nil {
 		return nil, err
 	}
@@ -76,13 +82,13 @@ func (odbi *ovnDBImp) lswAddImp(lsw string) (*OvnCommand, error) {
 	lswitch["name"] = lsw
 
 	if odbi.getRowUUID(TableLS, lswitch) != "" {
-		return nil, errors.New("The logical switch existed, and will get nil command")
+		return nil, ErrorExists
 	}
 	insertOp := libovsdb.Operation{
 		Op:       OpInsert,
 		Table:    TableLS,
 		Row:      lswitch,
-		UUIDName: namedUUID.String(),
+		UUIDName: namedUUID,
 	}
 	operations := []libovsdb.Operation{insertOp}
 	return &OvnCommand{operations, odbi, make([][]map[string]interface{}, len(operations))}, nil
@@ -237,8 +243,9 @@ func (odbi *ovnDBImp) getRowUUIDContainsUUID(table, field, uuid string) string {
 }
 
 func (odbi *ovnDBImp) lspAddImp(lsw, lsp string) (*OvnCommand, error) {
-	//	namedUUID := "lsp_add" + strconv.Itoa(rand.Int())
-	namedUUID, err := ulid.New(ulid.Now(), entropy)
+	var err error
+	namedUUID := "lsp_add" + strconv.Itoa(rand.Int())
+	//namedUUID, err := ulid.New(ulid.Now(), entropy)
 	if err != nil {
 		return nil, err
 	}
@@ -246,17 +253,17 @@ func (odbi *ovnDBImp) lspAddImp(lsw, lsp string) (*OvnCommand, error) {
 	lsprow["name"] = lsp
 
 	if odbi.getRowUUID(TableLSP, lsprow) != "" {
-		return nil, errors.New("The logical switch port existed, and will get nil command")
+		return nil, ErrorExists
 	}
 
 	insertOp := libovsdb.Operation{
 		Op:       OpInsert,
 		Table:    TableLSP,
 		Row:      lsprow,
-		UUIDName: namedUUID.String(),
+		UUIDName: namedUUID,
 	}
 
-	mutateUUID := []libovsdb.UUID{{namedUUID.String()}}
+	mutateUUID := []libovsdb.UUID{{namedUUID}}
 	mutateSet, _ := libovsdb.NewOvsSet(mutateUUID)
 	mutation := libovsdb.NewMutation("ports", OpInsert, mutateSet)
 	condition := libovsdb.NewCondition("name", "==", lsw)
@@ -297,14 +304,14 @@ func (odbi *ovnDBImp) lspDelImp(lsp string) (*OvnCommand, error) {
 }
 
 func (odbi *ovnDBImp) lspSetDHCPv4OptionsImp(lsp string, cidr string, opts map[string]string, external_ids map[string]string) (*OvnCommand, error) {
-	//	namedUUID := "dhcp_add" + strconv.Itoa(rand.Int())
-	namedUUID, err := ulid.New(ulid.Now(), entropy)
+	var err error
+	namedUUID := "dhcp_add" + strconv.Itoa(rand.Int())
+	//namedUUID, err := ulid.New(ulid.Now(), entropy)
 	if err != nil {
 		return nil, err
 	}
 	dhcprow := make(OVNRow)
 	dhcprow["cidr"] = cidr
-
 	oOpts, err := libovsdb.NewOvsMap(opts)
 	if err != nil {
 		return nil, errors.New("Add DHCP: Opts is not correct in DHCP_Options")
@@ -330,10 +337,10 @@ func (odbi *ovnDBImp) lspSetDHCPv4OptionsImp(lsp string, cidr string, opts map[s
 		Op:       OpInsert,
 		Table:    TableDHCPOptions,
 		Row:      dhcprow,
-		UUIDName: namedUUID.String(),
+		UUIDName: namedUUID,
 	}
 
-	mutateUUID := []libovsdb.UUID{{namedUUID.String()}}
+	mutateUUID := []libovsdb.UUID{{namedUUID}}
 	mutateSet, _ := libovsdb.NewOvsSet(mutateUUID)
 	mutation := libovsdb.NewMutation("dhcpv4_options", OpInsert, mutateSet)
 	condition := libovsdb.NewCondition("name", "==", lsp)
@@ -392,8 +399,9 @@ func (odbi *ovnDBImp) lspSetPortSecurityImp(lsp string, security ...string) (*Ov
 }
 
 func (odbi *ovnDBImp) aclAddImp(lsw, direct, match, action string, priority int, external_ids map[string]string, logflag bool) (*OvnCommand, error) {
-	//	namedUUID := "acl_add" + strconv.Itoa(rand.Int())
-	namedUUID, err := ulid.New(ulid.Now(), entropy)
+	var err error
+	namedUUID := "acl_add" + strconv.Itoa(rand.Int())
+	//namedUUID, err := ulid.New(ulid.Now(), entropy)
 	if err != nil {
 		return nil, err
 	}
@@ -411,7 +419,7 @@ func (odbi *ovnDBImp) aclAddImp(lsw, direct, match, action string, priority int,
 	}
 
 	if odbi.getACLUUIDByRow(lsw, TableACL, aclrow) != "" {
-		return nil, errors.New("The acl existed, and will get nil command")
+		return nil, ErrorExists
 	}
 	aclrow["action"] = action
 	aclrow["log"] = logflag
@@ -419,10 +427,10 @@ func (odbi *ovnDBImp) aclAddImp(lsw, direct, match, action string, priority int,
 		Op:       OpInsert,
 		Table:    TableACL,
 		Row:      aclrow,
-		UUIDName: namedUUID.String(),
+		UUIDName: namedUUID,
 	}
 
-	mutateUUID := []libovsdb.UUID{{namedUUID.String()}}
+	mutateUUID := []libovsdb.UUID{{namedUUID}}
 	mutateSet, _ := libovsdb.NewOvsSet(mutateUUID)
 	mutation := libovsdb.NewMutation("acls", OpInsert, mutateSet)
 	condition := libovsdb.NewCondition("name", "==", lsw)
