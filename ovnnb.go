@@ -17,7 +17,7 @@
 package ovn
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/socketplane/libovsdb"
 )
@@ -30,25 +30,24 @@ func newNBClient(socketfile string, protocol string, server string, port int) (*
 		protocol: UNIX,
 	}
 
-	if protocol == UNIX {
+	switch protocol {
+	case UNIX:
 		clt, err := libovsdb.ConnectWithUnixSocket(socketfile)
 		if err != nil {
-			//glog.Fatalf("OVN DB initial failed: (%v) with socket file %s.", err, socketfile)
 			return nil, err
 		}
 		client.dbclient = clt
 		return client, nil
-
-	} else if protocol == TCP {
+	case TCP:
 		clt, err := libovsdb.Connect(server, port)
 		if err != nil {
-			//glog.Fatalf("OVN DB initial failed: (%v) on %s:%d", err, server, port)
 			return nil, err
 		}
 		client.dbclient = clt
 		return client, nil
 	}
-	return nil, errors.New("OVN DB initial failed: (unsupported protocol)")
+
+	return nil, fmt.Errorf("ovn initial failed with unsupported protocol: %s", protocol)
 }
 
 func newNBBySocket(socketfile string, callback OVNSignal) (*OVNDB, error) {
