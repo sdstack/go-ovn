@@ -17,7 +17,6 @@
 package ovn
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 
@@ -85,14 +84,15 @@ type OVNDB struct {
 	imp *ovnDBImp
 }
 
-var once sync.Once
+var mu sync.Mutex
 var ovnDBApi OVNDBApi
 
 func GetInstance(socketfile string, protocol string, server string, port int, callback OVNSignal) (OVNDBApi, error) {
-	//	once.Do(func() {
 	var dbapi *OVNDB
 	var err error
 
+	mu.Lock()
+	defer mu.Unlock()
 	if ovnDBApi != nil {
 		return ovnDBApi, nil
 	}
@@ -102,14 +102,15 @@ func GetInstance(socketfile string, protocol string, server string, port int, ca
 	} else if protocol == TCP {
 		dbapi, err = newNBByServer(server, port, callback)
 	} else {
-		err = errors.New(fmt.Sprintf("The protocol [%s] is not supported", protocol))
+		err = fmt.Errorf("The protocol [%s] is not supported", protocol)
 	}
 
 	if err != nil {
 		return nil, err
 	}
+
 	ovnDBApi = dbapi
-	//})
+
 	return ovnDBApi, nil
 }
 

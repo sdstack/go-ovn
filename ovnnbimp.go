@@ -17,30 +17,16 @@
 package ovn
 
 import (
-	"errors"
 	"fmt"
-	"math/rand"
 	"reflect"
-	"strconv"
-	"strings"
-	"time"
 
-	//	"github.com/oklog/ulid"
+	"github.com/gofrs/uuid"
 	"github.com/socketplane/libovsdb"
 )
 
 var (
-	entropy *rand.Rand
+	ErrorExists = fmt.Errorf("Item already exists")
 )
-
-var (
-	ErrorExists = errors.New("Item already exists")
-)
-
-func init() {
-	entropy = rand.New(rand.NewSource(time.Now().UnixNano()))
-	//rand.Seed(MAX_TRANSACTION)
-}
 
 type OVNRow map[string]interface{}
 
@@ -71,13 +57,10 @@ func (odbi *ovnDBImp) lswListImp() (*OvnCommand, error) {
 }
 
 func (odbi *ovnDBImp) lswAddImp(lsw string) (*OvnCommand, error) {
-	var err error
-	namedUUID := "lsw_add" + strconv.Itoa(rand.Int())
-	//namedUUID, err := ulid.New(ulid.Now(), entropy)
+	namedUUID, err := uuid.NewV4()
 	if err != nil {
 		return nil, err
 	}
-	//row to insert
 	lswitch := make(OVNRow)
 	lswitch["name"] = lsw
 
@@ -234,8 +217,7 @@ func (odbi *ovnDBImp) getRowUUIDContainsUUID(table, field, uuid string) string {
 	odbi.cachemutex.Lock()
 	defer odbi.cachemutex.Unlock()
 	for id, drows := range odbi.cache[table] {
-		v := fmt.Sprintf("%s", drows.Fields[field])
-		if strings.Contains(v, uuid) {
+		if fmt.Sprintf("%s", drows.Fields[field]) == uuid {
 			return id
 		}
 	}
@@ -243,9 +225,7 @@ func (odbi *ovnDBImp) getRowUUIDContainsUUID(table, field, uuid string) string {
 }
 
 func (odbi *ovnDBImp) lspAddImp(lsw, lsp string) (*OvnCommand, error) {
-	var err error
-	namedUUID := "lsp_add" + strconv.Itoa(rand.Int())
-	//namedUUID, err := ulid.New(ulid.Now(), entropy)
+	namedUUID, err := uuid.NewV4()
 	if err != nil {
 		return nil, err
 	}
@@ -304,9 +284,7 @@ func (odbi *ovnDBImp) lspDelImp(lsp string) (*OvnCommand, error) {
 }
 
 func (odbi *ovnDBImp) lspSetDHCPv4OptionsImp(lsp string, cidr string, opts map[string]string, external_ids map[string]string) (*OvnCommand, error) {
-	var err error
-	namedUUID := "dhcp_add" + strconv.Itoa(rand.Int())
-	//namedUUID, err := ulid.New(ulid.Now(), entropy)
+	namedUUID, err := uuid.NewV4()
 	if err != nil {
 		return nil, err
 	}
@@ -314,14 +292,14 @@ func (odbi *ovnDBImp) lspSetDHCPv4OptionsImp(lsp string, cidr string, opts map[s
 	dhcprow["cidr"] = cidr
 	oOpts, err := libovsdb.NewOvsMap(opts)
 	if err != nil {
-		return nil, errors.New("Add DHCP: Opts is not correct in DHCP_Options")
+		return nil, fmt.Errorf("Add DHCP: Opts is not correct in DHCP_Options")
 	}
 	dhcprow["options"] = oOpts
 
 	if external_ids != nil {
 		oMap, err := libovsdb.NewOvsMap(external_ids)
 		if err != nil {
-			return nil, errors.New("Add DHCP: External id is not correct in DHCP_Options")
+			return nil, fmt.Errorf("Add DHCP: External id is not correct in DHCP_Options")
 		}
 		dhcprow["external_ids"] = oMap
 	}
@@ -399,9 +377,7 @@ func (odbi *ovnDBImp) lspSetPortSecurityImp(lsp string, security ...string) (*Ov
 }
 
 func (odbi *ovnDBImp) aclAddImp(lsw, direct, match, action string, priority int, external_ids map[string]string, logflag bool) (*OvnCommand, error) {
-	var err error
-	namedUUID := "acl_add" + strconv.Itoa(rand.Int())
-	//namedUUID, err := ulid.New(ulid.Now(), entropy)
+	namedUUID, err := uuid.NewV4()
 	if err != nil {
 		return nil, err
 	}
@@ -413,7 +389,7 @@ func (odbi *ovnDBImp) aclAddImp(lsw, direct, match, action string, priority int,
 	if external_ids != nil {
 		oMap, err := libovsdb.NewOvsMap(external_ids)
 		if err != nil {
-			return nil, errors.New("Add ACL: External id is not correct in acl")
+			return nil, fmt.Errorf("Add ACL: External id is not correct in acl")
 		}
 		aclrow["external_ids"] = oMap
 	}
@@ -465,14 +441,14 @@ func (odbi *ovnDBImp) aclDelImp(lsw, direct, match string, priority int, externa
 	if external_ids != nil {
 		oMap, err := libovsdb.NewOvsMap(external_ids)
 		if err != nil {
-			return nil, errors.New("Add ACL: External id is not correct in acl")
+			return nil, fmt.Errorf("Add ACL: External id is not correct in acl")
 		}
 		aclrow["external_ids"] = oMap
 	}
 
 	aclUUID := odbi.getACLUUIDByRow(lsw, TableACL, aclrow)
 	if aclUUID == "" {
-		return nil, errors.New("The deleting acl not found in cache, and will get nil command")
+		return nil, fmt.Errorf("The deleting acl not found in cache, and will get nil command")
 	}
 
 	uuidcondition := libovsdb.NewCondition("_uuid", "==", libovsdb.UUID{aclUUID})
@@ -505,7 +481,7 @@ func (odbi *ovnDBImp) ASUpdate(name string, addrs []string, external_ids map[str
 	if external_ids != nil {
 		oMap, err := libovsdb.NewOvsMap(external_ids)
 		if err != nil {
-			return nil, errors.New("Add AS: External id is not correct in address set")
+			return nil, fmt.Errorf("Add AS: External id is not correct in address set")
 		}
 		asrow["external_ids"] = oMap
 	}
@@ -525,12 +501,12 @@ func (odbi *ovnDBImp) ASAdd(name string, addrs []string, external_ids map[string
 	asrow["name"] = name
 	//should support the -is-exist flag here.
 	if odbi.getRowUUID(TableAS, asrow) != "" {
-		return nil, errors.New("Add AS: already exists, get nil command")
+		return nil, fmt.Errorf("Add AS: already exists, get nil command")
 	}
 	if external_ids != nil {
 		oMap, err := libovsdb.NewOvsMap(external_ids)
 		if err != nil {
-			return nil, errors.New("Add AS: External id is not correct in address set")
+			return nil, fmt.Errorf("Add AS: External id is not correct in address set")
 		}
 		asrow["external_ids"] = oMap
 	}
@@ -593,16 +569,13 @@ func (odbi *ovnDBImp) transact(ops ...libovsdb.Operation) ([]libovsdb.OperationR
 	}
 
 	if len(reply) < len(ops) {
-		//		glog.V(OVNLOGLEVEL).Info("Number of Replies should be atleast equal to number of operations")
 		for i, o := range reply {
 			if o.Error != "" && i < len(ops) {
-				//	glog.V(OVNLOGLEVEL).Info("Transaction Failed due to an error :", o.Error, " details:", o.Details, " in ", ops[i])
-				return nil, errors.New(fmt.Sprint("Transaction Failed due to an error :", o.Error, " details:", o.Details, " in ", ops[i]))
+				return nil, fmt.Errorf("Transaction Failed due to an error :", o.Error, " details:", o.Details, " in ", ops[i])
 			}
 		}
-		return reply, errors.New(fmt.Sprint("Number of Replies should be atleast equal to number of operations"))
+		return reply, fmt.Errorf("Number of Replies should be atleast equal to number of operations")
 	}
-	//glog.V(OVNLOGLEVEL).Info("transaction reply : ", reply)
 	return reply, nil
 }
 
@@ -617,7 +590,6 @@ func (odbi *ovnDBImp) Execute(cmds ...*OvnCommand) error {
 		}
 	}
 	_, err := odbi.transact(ops...)
-	//	glog.V(OVNLOGLEVEL).Infof("OVN replys: %v", reply)
 	if err != nil {
 		return err
 	}
@@ -636,7 +608,6 @@ func (odbi *ovnDBImp) float64_to_int(row libovsdb.Row) {
 }
 
 func (odbi *ovnDBImp) populateCache(updates libovsdb.TableUpdates) {
-	//glog.V(OVNLOGLEVEL).Info("New nofity arrived")
 	odbi.cachemutex.Lock()
 	defer odbi.cachemutex.Unlock()
 	for table, tableUpdate := range updates.Updates {
@@ -701,7 +672,8 @@ func (odbi *ovnDBImp) RowToLogicalPort(uuid string) *LogcalPort {
 	case libovsdb.OvsSet:
 		lp.Addresses = odbi.ConvertGoSetToStringArray(addr.(libovsdb.OvsSet))
 	default:
-		//glog.V(OVNLOGLEVEL).Info("Unsupport type found in lport address.")
+		// Unsupport type found in lport address
+		return nil
 	}
 	portsecurity := odbi.cache[TableLSP][uuid].Fields["port_security"]
 	switch portsecurity.(type) {
@@ -710,7 +682,8 @@ func (odbi *ovnDBImp) RowToLogicalPort(uuid string) *LogcalPort {
 	case libovsdb.OvsSet:
 		lp.PortSecurity = odbi.ConvertGoSetToStringArray(portsecurity.(libovsdb.OvsSet))
 	default:
-		//glog.V(OVNLOGLEVEL).Info("Unsupport type found in lport port security.")
+		// Unsupport type found in lport port security
+		return nil
 	}
 	return lp
 }
@@ -734,17 +707,20 @@ func (odbi *ovnDBImp) GetLogicPortsBySwitch(lsw string) []*LogcalPort {
 							}
 						}
 					} else {
-						//			glog.V(OVNLOGLEVEL).Info("Type libovsdb.OvsSet casting failed.")
+						// Type libovsdb.OvsSet casting failed
+						return nil
 					}
 				case libovsdb.UUID:
 					if vp, ok := ports.(libovsdb.UUID); ok {
 						tp := odbi.RowToLogicalPort(vp.GoUUID)
 						lplist = append(lplist, tp)
 					} else {
-						//		glog.V(OVNLOGLEVEL).Info("Type libovsdb.UUID casting failed.")
+						// Type libovsdb.UUID casting failed
+						return nil
 					}
 				default:
-					//	glog.V(OVNLOGLEVEL).Info("Unsupport type found in ovsdb rows.")
+					// Unsupport type found in ovsdb rows
+					return nil
 				}
 			}
 			break
