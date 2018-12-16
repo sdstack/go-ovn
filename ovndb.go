@@ -51,8 +51,8 @@ const (
 	TableDHCPOptions    string = "DHCP_Options"
 	TableConnection     string = "Connection"
 	TableDNS            string = "DNS"
-	TalbeSSL            string = "SSL"
-	TalbeGatewayChassis string = "Gateway_Chassis"
+	TableSSL            string = "SSL"
+	TableGatewayChassis string = "Gateway_Chassis"
 )
 
 const (
