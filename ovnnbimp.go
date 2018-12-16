@@ -71,7 +71,7 @@ func (odbi *ovnDBImp) lswAddImp(lsw string) (*OvnCommand, error) {
 		Op:       OpInsert,
 		Table:    TableLS,
 		Row:      lswitch,
-		UUIDName: namedUUID,
+		UUIDName: namedUUID.String(),
 	}
 	operations := []libovsdb.Operation{insertOp}
 	return &OvnCommand{operations, odbi, make([][]map[string]interface{}, len(operations))}, nil
@@ -240,10 +240,10 @@ func (odbi *ovnDBImp) lspAddImp(lsw, lsp string) (*OvnCommand, error) {
 		Op:       OpInsert,
 		Table:    TableLSP,
 		Row:      lsprow,
-		UUIDName: namedUUID,
+		UUIDName: namedUUID.String(),
 	}
 
-	mutateUUID := []libovsdb.UUID{{namedUUID}}
+	mutateUUID := []libovsdb.UUID{{namedUUID.String()}}
 	mutateSet, _ := libovsdb.NewOvsSet(mutateUUID)
 	mutation := libovsdb.NewMutation("ports", OpInsert, mutateSet)
 	condition := libovsdb.NewCondition("name", "==", lsw)
@@ -315,10 +315,10 @@ func (odbi *ovnDBImp) lspSetDHCPv4OptionsImp(lsp string, cidr string, opts map[s
 		Op:       OpInsert,
 		Table:    TableDHCPOptions,
 		Row:      dhcprow,
-		UUIDName: namedUUID,
+		UUIDName: namedUUID.String(),
 	}
 
-	mutateUUID := []libovsdb.UUID{{namedUUID}}
+	mutateUUID := []libovsdb.UUID{{namedUUID.String()}}
 	mutateSet, _ := libovsdb.NewOvsSet(mutateUUID)
 	mutation := libovsdb.NewMutation("dhcpv4_options", OpInsert, mutateSet)
 	condition := libovsdb.NewCondition("name", "==", lsp)
@@ -403,10 +403,10 @@ func (odbi *ovnDBImp) aclAddImp(lsw, direct, match, action string, priority int,
 		Op:       OpInsert,
 		Table:    TableACL,
 		Row:      aclrow,
-		UUIDName: namedUUID,
+		UUIDName: namedUUID.String(),
 	}
 
-	mutateUUID := []libovsdb.UUID{{namedUUID}}
+	mutateUUID := []libovsdb.UUID{{namedUUID.String()}}
 	mutateSet, _ := libovsdb.NewOvsSet(mutateUUID)
 	mutation := libovsdb.NewMutation("acls", OpInsert, mutateSet)
 	condition := libovsdb.NewCondition("name", "==", lsw)
