@@ -19,7 +19,7 @@ package main
 import (
 	"fmt"
 
-	goovn "sdstack.com/sdstack/go-ovn"
+	ovn "github.com/unistack-org/go-ovn"
 
 	"os"
 )
@@ -32,7 +32,7 @@ const (
 	MATCH_SECOND = "outport == \"96d44061-1823-428b-a7ce-f473d10eb3d0\" && ip && ip.dst == 10.97.183.62"
 )
 
-var ovndbapi goovn.OVNDBApi
+var ovndbapi ovn.OVNDBApi
 
 func init() {
 	var err error
@@ -41,7 +41,7 @@ func init() {
 		ovs_rundir = OVS_RUNDIR
 	}
 	var socket = ovs_rundir + "/" + OVNNB_SOCKET
-	ovndbapi, err = goovn.GetInstance(socket, goovn.UNIX, "", 0, nil)
+	ovndbapi, err = ovn.GetInstance(socket, ovn.UNIX, "", 0, nil)
 	if err != nil {
 		panic(err)
 	}
