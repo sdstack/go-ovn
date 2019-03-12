@@ -24,22 +24,21 @@ import (
 )
 
 const (
-	insert string = "insert"
-	mutate string = "mutate"
-	del    string = "delete"
-	list   string = "select"
-	update string = "update"
+	opInsert string = "insert"
+	opMutate string = "mutate"
+	opDelete string = "delete"
+	opList   string = "select"
+	opUpdate string = "update"
 )
 
 const (
 	NBDB string = "OVN_Northbound"
 )
-
 const (
 	tableNBGlobal                 string = "NB_Global"
 	tableLogicalSwitch            string = "Logical_Switch"
 	tableLogicalSwitchPort        string = "Logical_Switch_Port"
-	tableAddressSet               string = "tableAddressSet"
+	tableAddressSet               string = "Address_Set"
 	tablePortGroup                string = "Port_Group"
 	tableLoadBalancer             string = "Load_Balancer"
 	tableACL                      string = "ACL"

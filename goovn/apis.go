@@ -57,6 +57,10 @@ type OVNDBApi interface {
 	ASAdd(name string, addrs []string, external_ids map[string]string) (*OvnCommand, error)
 	// Delete addressset
 	ASDel(name string) (*OvnCommand, error)
+	// Add LR with given name
+	LRAdd(name string) (*OvnCommand, error)
+	// Delete LR with given name
+	LRDel(name string) (*OvnCommand, error)
 	// Add LB
 	LBAdd(name string, vipPort string, protocol string, addrs []string) (*OvnCommand, error)
 	// Delete LB with given name
@@ -79,7 +83,8 @@ type OVNDBApi interface {
 	GetASByName(name string) *AddressSet
 	// Get LB with given name
 	GetLB(name string) []*LoadBalancer
-
+	// Get LR with given name
+	GetLR(name string) []*LogicalRouter
 	SetCallBack(callback OVNSignal)
 }
 
@@ -110,6 +115,13 @@ func (ocmd *OvnCommand) Execute() error {
 type LogicalSwitch struct {
 	UUID       string
 	Name       string
+	ExternalID map[interface{}]interface{}
+}
+
+type LogicalRouter struct {
+	UUID       string
+	Name       string
+	Enabled    bool
 	ExternalID map[interface{}]interface{}
 }
 

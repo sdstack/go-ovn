@@ -105,12 +105,20 @@ func (odb *OVNDB) LSPSetPortSecurity(lsp string, security ...string) (*OvnComman
 	return odb.imp.lspSetPortSecurityImp(lsp, security...)
 }
 
+func (odb *OVNDB) LRAdd(name string) (*OvnCommand, error) {
+	return odb.imp.lrAddImp(name)
+}
+
+func (odb *OVNDB) LRDel(name string) (*OvnCommand, error) {
+	return odb.imp.lrDelImp(name)
+}
+
 func (odb *OVNDB) LBAdd(name string, vipPort string, protocol string, addrs []string) (*OvnCommand, error) {
-	return odb.imp.lbAddImpl(name, vipPort, protocol, addrs)
+	return odb.imp.lbAddImp(name, vipPort, protocol, addrs)
 }
 
 func (odb *OVNDB) LBUpdate(name string, vipPort string, protocol string, addrs []string) (*OvnCommand, error) {
-	return odb.imp.lbUpdateImpl(name, vipPort, protocol, addrs)
+	return odb.imp.lbUpdateImp(name, vipPort, protocol, addrs)
 }
 
 func (odb *OVNDB) LBDel(name string) (*OvnCommand, error) {
@@ -163,6 +171,10 @@ func (odb *OVNDB) GetAddressSets() []*AddressSet {
 
 func (odb *OVNDB) GetASByName(name string) *AddressSet {
 	return odb.imp.GetASByName(name)
+}
+
+func (odb *OVNDB) GetLR(name string) []*LogicalRouter {
+	return odb.imp.GetLR(name)
 }
 
 func (odb *OVNDB) GetLB(name string) []*LoadBalancer {
