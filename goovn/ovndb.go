@@ -39,6 +39,7 @@ const (
 	LSWITCH     string = "Logical_Switch"
 	LPORT       string = "Logical_Switch_Port"
 	ACLS        string = "ACL"
+	LB          string = "Load_Balancer"
 	Address_Set string = "Address_Set"
 )
 

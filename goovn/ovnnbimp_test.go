@@ -366,3 +366,52 @@ func TestAddressSet(t *testing.T) {
 	}
 	assert.Equal(t, false, findAS("AS2"), "test AS remove")
 }
+
+func TestLoadBalancer(t *testing.T) {
+	t.Logf("Adding LB to OVN")
+	ocmd, err := ovndbapi.LBAdd("lb1", "192.168.0.19:80", "tcp", []string{"10.0.0.11:80", "10.0.0.12:80"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = ovndbapi.Execute(ocmd)
+	if err != nil {
+		t.Fatalf("Adding LB OVN failed with err %v", err)
+	}
+	t.Logf("Adding LB to OVN Done")
+
+	t.Logf("Updating LB to OVN")
+	ocmd, err = ovndbapi.LBUpdate("lb1", "192.168.0.10:80", "tcp", []string{"10.10.10.127:8080", "10.10.10.120:8080"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = ovndbapi.Execute(ocmd)
+	if err != nil {
+		t.Fatalf("Updating LB OVN failed with err %v", err)
+	}
+	t.Logf("Updating LB to OVN done")
+
+	t.Logf("Gettting LB by name")
+	lb := ovndbapi.GetLB("lb1")
+	if len(lb) != 1 {
+		t.Fatalf("err getting lbs, total:%v", len(lb))
+	}
+	t.Logf("Lb found:%+v", lb[0])
+
+	t.Logf("Deleting LB")
+	ocmd, err = ovndbapi.LBDel("lb1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = ovndbapi.Execute(ocmd)
+	if err != nil {
+		t.Fatalf("err executing command:%v", err)
+	}
+
+	// Verify deletion
+	lb = ovndbapi.GetLB("lb1")
+	if len(lb) != 0 {
+		t.Fatalf("error: lb deletion not done, total:%v", len(lb))
+	}
+	t.Logf("LB deletion done")
+}
