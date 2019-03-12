@@ -36,10 +36,25 @@ const (
 )
 
 const (
-	LSWITCH     string = "Logical_Switch"
-	LPORT       string = "Logical_Switch_Port"
-	ACLS        string = "ACL"
-	Address_Set string = "Address_Set"
+	tableNBGlobal                 string = "NB_Global"
+	tableLogicalSwitch            string = "Logical_Switch"
+	tableLogicalSwitchPort        string = "Logical_Switch_Port"
+	tableAddressSet               string = "tableAddressSet"
+	tablePortGroup                string = "Port_Group"
+	tableLoadBalancer             string = "Load_Balancer"
+	tableACL                      string = "ACL"
+	tableLogicalRouter            string = "Logical_Router"
+	tableQoS                      string = "QoS"
+	tableMeter                    string = "Meter"
+	tableMeterBand                string = "Meter_Band"
+	tableLogicalRouterPort        string = "Logical_Router_Port"
+	tableLogicalRouterStaticRoute string = "Logical_Router_Static_Route"
+	tableNAT                      string = "NAT"
+	tableDHCP_Options             string = "DHCP_Options"
+	tableConnection               string = "Connection"
+	tableDNS                      string = "DNS"
+	tableSSL                      string = "SSL"
+	tableGatewayChassis           string = "Gateway_Chassis"
 )
 
 const (
