@@ -30,10 +30,8 @@ type LogicalRouter struct {
 	NAT          []*NAT
 	LoadBalancer []*LoadBalancer
 
-	Chassis         string
-	DNATForceSNATIP string
-	LBForceSNATIP   string
-	ExternalID      map[interface{}]interface{}
+	Options    map[interface{}]interface{}
+	ExternalID map[interface{}]interface{}
 }
 
 func (odbi *ovnDBImp) lrAddImp(name string) (*OvnCommand, error) {
