@@ -50,7 +50,7 @@ func TestMain(m *testing.M) {
 	var ovn_nb_db = os.Getenv("OVN_NB_DB")
 	if ovn_nb_db == "" {
 		var socket = ovs_rundir + "/" + OVNNB_SOCKET
-		api, err = New(socket, UNIX, "", 0, nil)
+		api, err = GetInstance(socket, UNIX, "", 0, nil)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -61,13 +61,13 @@ func TestMain(m *testing.M) {
 		}
 		if len(strs) == 2 {
 			var socket = ovs_rundir + "/" + strs[1]
-			api, err = New(socket, UNIX, "", 0, nil)
+			api, err = GetInstance(socket, UNIX, "", 0, nil)
 			if err != nil {
 				log.Fatal(err)
 			}
 		} else {
 			port, _ := strconv.Atoi(strs[2])
-			api, err = New("", strs[0], strs[1], port, nil)
+			api, err = GetInstance("", strs[0], strs[1], port, nil)
 			if err != nil {
 				log.Fatal(err)
 			}

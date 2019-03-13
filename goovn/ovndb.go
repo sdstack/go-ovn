@@ -86,24 +86,27 @@ type OVNDB struct {
 	imp *ovnDBImp
 }
 
-func New(socketfile string, proto string, server string, port int, callback OVNSignal) (OVNDBApi, error) {
-	var dbapi *OVNDB
+func GetInstance(socketfile string, proto string, server string, port int, callback OVNSignal) (OVNDBApi, error) {
 	var err error
 
-	switch proto {
-	case UNIX:
-		dbapi, err = newNBBySocket(socketfile, callback)
-	case TCP:
-		dbapi, err = newNBByServer(server, port, callback)
-	default:
-		err = fmt.Errorf("The protocol [%s] is not supported", proto)
-	}
+	once.Do(func() {
+		var dbapi *OVNDB
 
-	if err != nil {
-		return nil, err
-	}
+		switch proto {
+		case UNIX:
+			dbapi, err = newNBBySocket(socketfile, callback)
+		case TCP:
+			dbapi, err = newNBByServer(server, port, callback)
+		default:
+			err = fmt.Errorf("the protocol [%s] is not supported", proto)
+		}
+		if err != nil {
+			return
+		}
+		ovnDBApi = dbapi
+	})
 
-	return dbapi, nil
+	return ovnDBApi, err
 }
 
 func SetCallBack(c OVNDBApi, callback OVNSignal) {
