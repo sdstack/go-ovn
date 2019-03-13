@@ -60,41 +60,6 @@ func (odbi *ovnDBImp) lswListImp() (*OvnCommand, error) {
 	return &OvnCommand{operations, odbi, make([][]map[string]interface{}, len(operations))}, nil
 }
 
-func (odbi *ovnDBImp) lrAddImp(name string) (*OvnCommand, error) {
-	namedUUID, err := newUUID()
-	if err != nil {
-		return nil, err
-	}
-
-	//row to insert
-	lrouter := make(OVNRow)
-	lrouter["name"] = name
-
-	if uuid := odbi.getRowUUID(tableLogicalRouter, lrouter); len(uuid) > 0 {
-		return nil, ErrorExist
-	}
-
-	insertOp := libovsdb.Operation{
-		Op:       opInsert,
-		Table:    tableLogicalRouter,
-		Row:      lrouter,
-		UUIDName: namedUUID,
-	}
-	operations := []libovsdb.Operation{insertOp}
-	return &OvnCommand{operations, odbi, make([][]map[string]interface{}, len(operations))}, nil
-}
-
-func (odbi *ovnDBImp) lrDelImp(name string) (*OvnCommand, error) {
-	condition := libovsdb.NewCondition("name", "==", name)
-	deleteOp := libovsdb.Operation{
-		Op:    opDelete,
-		Table: tableLogicalRouter,
-		Where: []interface{}{condition},
-	}
-	operations := []libovsdb.Operation{deleteOp}
-	return &OvnCommand{operations, odbi, make([][]map[string]interface{}, len(operations))}, nil
-}
-
 func (odbi *ovnDBImp) lbUpdateImp(name string, vipPort string, protocol string, addrs []string) (*OvnCommand, error) {
 	//row to update
 	lb := make(OVNRow)
