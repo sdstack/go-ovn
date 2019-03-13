@@ -20,6 +20,22 @@ import (
 	"github.com/socketplane/libovsdb"
 )
 
+type LogicalRouter struct {
+	UUID    string
+	Name    string
+	Enabled bool
+
+	Ports        []*LogicalRouterPort
+	StaticRoutes []*LogicalRouterStaticRoute
+	NAT          []*NAT
+	LoadBalancer []*LoadBalancer
+
+	Chassis         string
+	DNATForceSNATIP string
+	LBForceSNATIP   string
+	ExternalID      map[interface{}]interface{}
+}
+
 func (odbi *ovnDBImp) lrAddImp(name string) (*OvnCommand, error) {
 	namedUUID, err := newUUID()
 	if err != nil {
@@ -40,17 +56,22 @@ func (odbi *ovnDBImp) lrAddImp(name string) (*OvnCommand, error) {
 		Row:      lrouter,
 		UUIDName: namedUUID,
 	}
+
 	operations := []libovsdb.Operation{insertOp}
+
 	return &OvnCommand{operations, odbi, make([][]map[string]interface{}, len(operations))}, nil
 }
 
 func (odbi *ovnDBImp) lrDelImp(name string) (*OvnCommand, error) {
 	condition := libovsdb.NewCondition("name", "==", name)
+
 	deleteOp := libovsdb.Operation{
 		Op:    opDelete,
 		Table: tableLogicalRouter,
 		Where: []interface{}{condition},
 	}
+
 	operations := []libovsdb.Operation{deleteOp}
+
 	return &OvnCommand{operations, odbi, make([][]map[string]interface{}, len(operations))}, nil
 }

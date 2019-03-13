@@ -118,13 +118,6 @@ type LogicalSwitch struct {
 	ExternalID map[interface{}]interface{}
 }
 
-type LogicalRouter struct {
-	UUID       string
-	Name       string
-	Enabled    bool
-	ExternalID map[interface{}]interface{}
-}
-
 type LoadBalancer struct {
 	UUID       string
 	Name       string
