@@ -86,6 +86,9 @@ type OVNDB struct {
 	imp *ovnDBImp
 }
 
+var once sync.Once
+var ovnDBApi OVNDBApi
+
 func GetInstance(socketfile string, proto string, server string, port int, callback OVNSignal) (OVNDBApi, error) {
 	var err error
 
