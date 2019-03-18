@@ -20,24 +20,56 @@ import (
 	"github.com/socketplane/libovsdb"
 )
 
-func (odbi *ovnDBImp) GetLR(name string) []*LogicalRouter {
-	var lrList []*LogicalRouter
-	odbi.cachemutex.Lock()
-	defer odbi.cachemutex.Unlock()
+type LogicalRouter struct {
+	UUID    string
+	Name    string
+	Enabled bool
 
-	for uuid, drows := range odbi.cache[tableLogicalRouter] {
-		if lrName, ok := drows.Fields["name"].(string); ok && lrName == name {
-			lr := odbi.RowToLR(uuid)
-			lrList = append(lrList, lr)
-		}
-	}
-	return lrList
+	Ports        []*LogicalRouterPort
+	StaticRoutes []*LogicalRouterStaticRoute
+	NAT          []*NAT
+	LoadBalancer []*LoadBalancer
+
+	Options    map[interface{}]interface{}
+	ExternalID map[interface{}]interface{}
 }
 
-func (odbi *ovnDBImp) RowToLR(uuid string) *LogicalRouter {
-	return &LogicalRouter{
-		UUID:       uuid,
-		Name:       odbi.cache[tableLoadBalancer][uuid].Fields["name"].(string),
-		ExternalID: odbi.cache[tableLoadBalancer][uuid].Fields["external_ids"].(libovsdb.OvsMap).GoMap,
+func (odbi *ovnDBImp) lrAddImp(name string) (*OvnCommand, error) {
+	namedUUID, err := newUUID()
+	if err != nil {
+		return nil, err
 	}
+
+	//row to insert
+	lrouter := make(OVNRow)
+	lrouter["name"] = name
+
+	if uuid := odbi.getRowUUID(tableLogicalRouter, lrouter); len(uuid) > 0 {
+		return nil, ErrorExist
+	}
+
+	insertOp := libovsdb.Operation{
+		Op:       opInsert,
+		Table:    tableLogicalRouter,
+		Row:      lrouter,
+		UUIDName: namedUUID,
+	}
+
+	operations := []libovsdb.Operation{insertOp}
+
+	return &OvnCommand{operations, odbi, make([][]map[string]interface{}, len(operations))}, nil
+}
+
+func (odbi *ovnDBImp) lrDelImp(name string) (*OvnCommand, error) {
+	condition := libovsdb.NewCondition("name", "==", name)
+
+	deleteOp := libovsdb.Operation{
+		Op:    opDelete,
+		Table: tableLogicalRouter,
+		Where: []interface{}{condition},
+	}
+
+	operations := []libovsdb.Operation{deleteOp}
+
+	return &OvnCommand{operations, odbi, make([][]map[string]interface{}, len(operations))}, nil
 }
