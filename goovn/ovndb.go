@@ -27,7 +27,7 @@ const (
 	opInsert string = "insert"
 	opMutate string = "mutate"
 	opDelete string = "delete"
-	opList   string = "select"
+	opSelect string = "select"
 	opUpdate string = "update"
 )
 
@@ -49,21 +49,18 @@ const (
 	tableLogicalRouterPort        string = "Logical_Router_Port"
 	tableLogicalRouterStaticRoute string = "Logical_Router_Static_Route"
 	tableNAT                      string = "NAT"
-	tableDHCP_Options             string = "DHCP_Options"
+	tableDHCPOptions              string = "DHCP_Options"
 	tableConnection               string = "Connection"
 	tableDNS                      string = "DNS"
 	tableSSL                      string = "SSL"
 	tableGatewayChassis           string = "Gateway_Chassis"
 )
 
+// OVN supporter protocols
 const (
 	UNIX string = "unix"
 	TCP  string = "tcp"
-)
-
-const (
-	//random seed.
-	MAX_TRANSACTION = 1000
+	SSL  string = "ssl"
 )
 
 type ovnDBClient struct {
@@ -99,7 +96,9 @@ func GetInstance(socketfile string, proto string, server string, port int, callb
 		case UNIX:
 			dbapi, err = newNBBySocket(socketfile, callback)
 		case TCP:
-			dbapi, err = newNBByServer(server, port, callback)
+			dbapi, err = newNBByServer(server, port, callback, TCP)
+		case SSL:
+			dbapi, err = newNBByServer(server, port, callback, SSL)
 		default:
 			err = fmt.Errorf("the protocol [%s] is not supported", proto)
 		}

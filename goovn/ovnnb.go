@@ -18,7 +18,6 @@ package goovn
 
 import (
 	"errors"
-
 	"github.com/socketplane/libovsdb"
 )
 
@@ -39,7 +38,19 @@ func newNBClient(socketfile string, proto string, server string, port int) (*ovn
 		client.dbclient = clt
 		return client, nil
 	case TCP:
-		clt, err := libovsdb.Connect(server, port)
+		clt, err := libovsdb.Connect(server, port, proto)
+
+		if err != nil {
+			return nil, err
+		}
+		client.dbclient = clt
+		return client, nil
+	case SSL:
+		// for connection using SSL, make sure to set CLIENT_CERT_CA_CERT
+		// and CLIENT_PRIVKEY in the env variable. CLIENT_CERT_CA_CERT is a
+		// combination of client cert and ca cert appended in the same file.
+		clt, err := libovsdb.Connect(server, port, proto)
+
 		if err != nil {
 			return nil, err
 		}
@@ -63,8 +74,8 @@ func newNBBySocket(socketfile string, callback OVNSignal) (*OVNDB, error) {
 	return &OVNDB{imp}, nil
 }
 
-func newNBByServer(server string, port int, callback OVNSignal) (*OVNDB, error) {
-	odb, err := newNBClient("", TCP, server, port)
+func newNBByServer(server string, port int, callback OVNSignal, protocol string) (*OVNDB, error) {
+	odb, err := newNBClient("", protocol, server, port)
 	if err != nil {
 		return nil, err
 	}
@@ -145,8 +156,8 @@ func (odb *OVNDB) ASUpdate(name string, addrs []string, external_ids map[string]
 	return odb.imp.ASUpdate(name, addrs, external_ids)
 }
 
-func (odb *OVNDB) LSSetOpt(lsp string, options map[string]string) (*OvnCommand, error) {
-	return odb.imp.LSSetOpt(lsp, options)
+func (odb *OVNDB) LSPSetOpt(lsp string, options map[string]string) (*OvnCommand, error) {
+	return odb.imp.LSPSetOpt(lsp, options)
 }
 
 func (odb *OVNDB) Execute(cmds ...*OvnCommand) error {
@@ -157,7 +168,7 @@ func (odb *OVNDB) GetLogicSwitches() []*LogicalSwitch {
 	return odb.imp.GetLogicSwitches()
 }
 
-func (odb *OVNDB) GetLogicPortsBySwitch(lsw string) ([]*LogicalPort, error) {
+func (odb *OVNDB) GetLogicPortsBySwitch(lsw string) ([]*LogicalSwitchPort, error) {
 	return odb.imp.GetLogicPortsBySwitch(lsw)
 }
 
