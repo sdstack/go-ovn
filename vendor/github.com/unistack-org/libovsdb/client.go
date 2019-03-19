@@ -52,8 +52,8 @@ const (
 	DefaultAddress = "127.0.0.1"
 	// DefaultPort is the default port used for a connection
 	DefaultPort     = 6640
-	TCP             = "tcp"
 	UNIX            = "unix"
+	TCP             = "tcp"
 	SSL             = "ssl"
 	SKIP_TLS_VERIFY = true
 )
@@ -155,12 +155,13 @@ func Connect(ipAddr string, port int, protocol string) (*OvsdbClient, error) {
 	}
 
 	target := fmt.Sprintf("%s:%d", ipAddr, port)
-	if protocol == TCP {
+	switch protocol {
+	case TCP, UNIX:
 		return ConnectUsingTCP(protocol, target)
-	} else if protocol == SSL {
+	case SSL:
 		return ConnectUsingSSL(protocol, target)
-	} else {
-		return nil, errors.New("Supported protocols are TCP, and SSL")
+	default:
+		return nil, errors.New("Supported protocols are TCP, UNIX and SSL")
 	}
 }
 
@@ -341,6 +342,23 @@ func (ovs OvsdbClient) MonitorAll(database string, jsonContext interface{}) (*Ta
 			}}
 	}
 	return ovs.Monitor(database, jsonContext, requests)
+}
+
+// MonitorCancel will request cancel a previously issued monitor request
+// RFC 7047 : monitor_cancel
+func (ovs OvsdbClient) MonitorCancel(database string, jsonContext interface{}) error {
+	var reply OperationResult
+
+	args := NewMonitorCancelArgs(jsonContext)
+
+	err := ovs.rpcClient.Call("monitor_cancel", args, &reply)
+	if err != nil {
+		return err
+	}
+	if reply.Error != "" {
+		return fmt.Errorf("Error while executing transaction: %s", reply.Error)
+	}
+	return nil
 }
 
 // Monitor will provide updates for a given table/column
