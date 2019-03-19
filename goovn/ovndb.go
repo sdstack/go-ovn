@@ -34,7 +34,6 @@ const (
 const (
 	NBDB string = "OVN_Northbound"
 )
-
 const (
 	tableNBGlobal                 string = "NB_Global"
 	tableLogicalSwitch            string = "Logical_Switch"
