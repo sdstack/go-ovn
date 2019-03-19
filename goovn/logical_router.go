@@ -100,14 +100,23 @@ func (odbi *ovnDBImp) RowToLogicalRouter(uuid string) *LogicalRouter {
 		ExternalID: odbi.cache[tableLogicalRouter][uuid].Fields["external_ids"].(libovsdb.OvsMap).GoMap,
 	}
 
+	if enabled, ok := odbi.cache[tableLogicalRouter][uuid].Fields["enabled"]; ok {
+		switch enabled.(type) {
+		case bool:
+			lr.Enabled = enabled.(bool)
+		case libovsdb.OvsSet:
+			if enabled.(libovsdb.OvsSet).GoSet == nil {
+				lr.Enabled = true
+			}
+		}
+	}
+
 	ports := odbi.cache[tableLogicalRouter][uuid].Fields["ports"]
 	switch ports.(type) {
 	case string:
 		lr.Ports = []string{ports.(string)}
 	case libovsdb.OvsSet:
 		lr.Ports = odbi.ConvertGoSetToStringArray(ports.(libovsdb.OvsSet))
-	default:
-		//      glog.V(OVNLOGLEVEL).Info("Unsupport type found in lport address.")
 	}
 
 	return lr
