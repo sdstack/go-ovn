@@ -25,75 +25,101 @@ type LogicalRouter struct {
 	Name    string
 	Enabled bool
 
-	Ports        []*LogicalRouterPort
-	StaticRoutes []*LogicalRouterStaticRoute
-	NAT          []*NAT
-	LoadBalancer []*LoadBalancer
+	Ports        []string
+	StaticRoutes []string
+	NAT          []string
+	LoadBalancer []string
 
 	Options    map[interface{}]interface{}
 	ExternalID map[interface{}]interface{}
 }
 
-func (odbi *ovnDBImp) lrAddImp(name string) (*OvnCommand, error) {
-	namedUUID, err := newUUID()
+func (odbi *ovnDBImp) lrAddImp(name string, external_ids map[string]string) (*OvnCommand, error) {
+	namedUUID, err := newRowUUID()
 	if err != nil {
 		return nil, err
 	}
 
-	//row to insert
-	lrouter := make(OVNRow)
-	lrouter["name"] = name
+	row := make(OVNRow)
+	row["name"] = name
 
-	if uuid := odbi.getRowUUID(tableLogicalRouter, lrouter); len(uuid) > 0 {
+	if external_ids != nil {
+		oMap, err := libovsdb.NewOvsMap(external_ids)
+		if err != nil {
+			return nil, err
+		}
+		row["external_ids"] = oMap
+	}
+
+	if uuid := odbi.getRowUUID(tableLogicalRouter, row); len(uuid) > 0 {
 		return nil, ErrorExist
 	}
 
 	insertOp := libovsdb.Operation{
 		Op:       opInsert,
 		Table:    tableLogicalRouter,
-		Row:      lrouter,
+		Row:      row,
 		UUIDName: namedUUID,
 	}
 
 	operations := []libovsdb.Operation{insertOp}
-
 	return &OvnCommand{operations, odbi, make([][]map[string]interface{}, len(operations))}, nil
 }
 
 func (odbi *ovnDBImp) lrDelImp(name string) (*OvnCommand, error) {
 	condition := libovsdb.NewCondition("name", "==", name)
-
 	deleteOp := libovsdb.Operation{
 		Op:    opDelete,
 		Table: tableLogicalRouter,
 		Where: []interface{}{condition},
 	}
-
 	operations := []libovsdb.Operation{deleteOp}
-
 	return &OvnCommand{operations, odbi, make([][]map[string]interface{}, len(operations))}, nil
 }
 
-func (odbi *ovnDBImp) GetLR(name string) []*LogicalRouter {
+func (odbi *ovnDBImp) GetLogicalRouter(name string) []*LogicalRouter {
 	var lrList []*LogicalRouter
 	odbi.cachemutex.Lock()
 	defer odbi.cachemutex.Unlock()
 
 	for uuid, drows := range odbi.cache[tableLogicalRouter] {
 		if lrName, ok := drows.Fields["name"].(string); ok && lrName == name {
-			lr := odbi.RowToLR(uuid)
+			lr := odbi.RowToLogicalRouter(uuid)
 			lrList = append(lrList, lr)
 		}
 	}
 	return lrList
 }
 
-func (odbi *ovnDBImp) RowToLR(uuid string) *LogicalRouter {
-	return &LogicalRouter{
-		UUID:       uuid,
-		Name:       odbi.cache[tableLoadBalancer][uuid].Fields["name"].(string),
-		Enabled:    odbi.cache[tableLoadBalancer][uuid].Fields["enabled"].(bool),
-		Options:    odbi.cache[tableLoadBalancer][uuid].Fields["options"].(libovsdb.OvsMap).GoMap,
-		ExternalID: odbi.cache[tableLoadBalancer][uuid].Fields["external_ids"].(libovsdb.OvsMap).GoMap,
+func (odbi *ovnDBImp) RowToLogicalRouter(uuid string) *LogicalRouter {
+	lr := &LogicalRouter{
+		UUID: uuid,
+		Name: odbi.cache[tableLogicalRouter][uuid].Fields["name"].(string),
+		//Enabled:    odbi.cache[tableLogicalRouter][uuid].Fields["enabled"].(bool),
+		Options:    odbi.cache[tableLogicalRouter][uuid].Fields["options"].(libovsdb.OvsMap).GoMap,
+		ExternalID: odbi.cache[tableLogicalRouter][uuid].Fields["external_ids"].(libovsdb.OvsMap).GoMap,
 	}
+
+	ports := odbi.cache[tableLogicalRouter][uuid].Fields["ports"]
+	switch ports.(type) {
+	case string:
+		lr.Ports = []string{ports.(string)}
+	case libovsdb.OvsSet:
+		lr.Ports = odbi.ConvertGoSetToStringArray(ports.(libovsdb.OvsSet))
+	default:
+		//      glog.V(OVNLOGLEVEL).Info("Unsupport type found in lport address.")
+	}
+
+	return lr
+}
+
+// Get all logical switches
+func (odbi *ovnDBImp) GetLogicalRouters() []*LogicalRouter {
+	var lrlist = []*LogicalRouter{}
+	odbi.cachemutex.Lock()
+	defer odbi.cachemutex.Unlock()
+	for uuid, _ := range odbi.cache[tableLogicalRouter] {
+		lrlist = append(lrlist, odbi.RowToLogicalRouter(uuid))
+	}
+	return lrlist
 }

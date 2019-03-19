@@ -58,9 +58,13 @@ type OVNDBApi interface {
 	// Delete addressset
 	ASDel(name string) (*OvnCommand, error)
 	// Add LR with given name
-	LRAdd(name string) (*OvnCommand, error)
+	LRAdd(name string, external_ids map[string]string) (*OvnCommand, error)
 	// Delete LR with given name
 	LRDel(name string) (*OvnCommand, error)
+	// Add LRP with given name on given lr
+	LRPAdd(lr string, lrp string, mac string, network []string, peer string, external_ids map[string]string) (*OvnCommand, error)
+	// Delete LRP with given name on given lr
+	LRPDel(lr string, lrp string) (*OvnCommand, error)
 	// Add LB
 	LBAdd(name string, vipPort string, protocol string, addrs []string) (*OvnCommand, error)
 	// Delete LB with given name
@@ -76,6 +80,9 @@ type OVNDBApi interface {
 	GetLogicSwitches() []*LogicalSwitch
 	// Get all lport by lswitch
 	GetLogicPortsBySwitch(lsw string) ([]*LogicalSwitchPort, error)
+	// Get all lrp by lr
+	GetLogicalRouterPortsByRouter(lr string) ([]*LogicalRouterPort, error)
+
 	// Get all acl by lswitch
 	GetACLsBySwitch(lsw string) []*ACL
 
@@ -84,7 +91,7 @@ type OVNDBApi interface {
 	// Get LB with given name
 	GetLB(name string) []*LoadBalancer
 	// Get LR with given name
-	GetLR(name string) []*LogicalRouter
+	GetLogicalRouters() []*LogicalRouter
 	SetCallBack(callback OVNSignal)
 }
 
@@ -94,6 +101,12 @@ type OVNSignal interface {
 
 	OnLogicalPortCreate(lp *LogicalSwitchPort)
 	OnLogicalPortDelete(lp *LogicalSwitchPort)
+
+	OnLogicalRouterCreate(lr *LogicalRouter)
+	OnLogicalRouterDelete(lr *LogicalRouter)
+
+	OnLogicalRouterPortCreate(lrp *LogicalRouterPort)
+	OnLogicalRouterPortDelete(lrp *LogicalRouterPort)
 
 	OnACLCreate(acl *ACL)
 	OnACLDelete(acl *ACL)
