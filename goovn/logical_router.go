@@ -93,9 +93,8 @@ func (odbi *ovnDBImp) GetLogicalRouter(name string) []*LogicalRouter {
 
 func (odbi *ovnDBImp) RowToLogicalRouter(uuid string) *LogicalRouter {
 	lr := &LogicalRouter{
-		UUID: uuid,
-		Name: odbi.cache[tableLogicalRouter][uuid].Fields["name"].(string),
-		//Enabled:    odbi.cache[tableLogicalRouter][uuid].Fields["enabled"].(bool),
+		UUID:       uuid,
+		Name:       odbi.cache[tableLogicalRouter][uuid].Fields["name"].(string),
 		Options:    odbi.cache[tableLogicalRouter][uuid].Fields["options"].(libovsdb.OvsMap).GoMap,
 		ExternalID: odbi.cache[tableLogicalRouter][uuid].Fields["external_ids"].(libovsdb.OvsMap).GoMap,
 	}
