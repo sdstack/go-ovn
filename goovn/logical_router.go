@@ -73,3 +73,27 @@ func (odbi *ovnDBImp) lrDelImp(name string) (*OvnCommand, error) {
 
 	return &OvnCommand{operations, odbi, make([][]map[string]interface{}, len(operations))}, nil
 }
+
+func (odbi *ovnDBImp) GetLR(name string) []*LogicalRouter {
+	var lrList []*LogicalRouter
+	odbi.cachemutex.Lock()
+	defer odbi.cachemutex.Unlock()
+
+	for uuid, drows := range odbi.cache[tableLogicalRouter] {
+		if lrName, ok := drows.Fields["name"].(string); ok && lrName == name {
+			lr := odbi.RowToLR(uuid)
+			lrList = append(lrList, lr)
+		}
+	}
+	return lrList
+}
+
+func (odbi *ovnDBImp) RowToLR(uuid string) *LogicalRouter {
+	return &LogicalRouter{
+		UUID:       uuid,
+		Name:       odbi.cache[tableLoadBalancer][uuid].Fields["name"].(string),
+		Enabled:    odbi.cache[tableLoadBalancer][uuid].Fields["enabled"].(bool),
+		Options:    odbi.cache[tableLoadBalancer][uuid].Fields["options"].(libovsdb.OvsMap).GoMap,
+		ExternalID: odbi.cache[tableLoadBalancer][uuid].Fields["external_ids"].(libovsdb.OvsMap).GoMap,
+	}
+}
